@@ -7,20 +7,11 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo "📦 Pulling latest code from GitHub..."
                 git branch: 'main', url: 'https://github.com/prashanty3/shivatechdigital.git'
-            }
-        }
-
-        stage('Build Frontend Inside Container') {
-            steps {
-                echo "🎨 Building frontend assets inside Docker container..."
-                sh '''
-                    docker exec -i sivatechdigital npm install
-                    docker exec -i sivatechdigital npm run build
-                '''
             }
         }
 
@@ -63,8 +54,8 @@ pipeline {
             steps {
                 echo "🔐 Setting correct permissions for Laravel..."
                 sh '''
-                    docker exec -i sivatechdigital chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-                    docker exec -i sivatechdigital chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+                    docker exec -w /var/www/html -i sivatechdigital chown -R www-data:www-data storage bootstrap/cache
+                    docker exec -w /var/www/html -i sivatechdigital chmod -R 775 storage bootstrap/cache
                 '''
             }
         }
@@ -73,13 +64,23 @@ pipeline {
             steps {
                 echo "🧰 Running composer install & artisan commands..."
                 sh '''
-                    docker exec -i sivatechdigital composer install
-                    docker exec -i sivatechdigital php artisan key:generate
-                    docker exec -i sivatechdigital php artisan migrate --force
-                    docker exec -i sivatechdigital php artisan config:cache
-                    docker exec -i sivatechdigital php artisan route:cache
-                    docker exec -i sivatechdigital php artisan view:cache
-                    docker exec -i sivatechdigital php artisan storage:link
+                    docker exec -w /var/www/html -i sivatechdigital composer install
+                    docker exec -w /var/www/html -i sivatechdigital php artisan key:generate
+                    docker exec -w /var/www/html -i sivatechdigital php artisan migrate --force
+                    docker exec -w /var/www/html -i sivatechdigital php artisan config:cache
+                    docker exec -w /var/www/html -i sivatechdigital php artisan route:cache
+                    docker exec -w /var/www/html -i sivatechdigital php artisan view:cache
+                    docker exec -w /var/www/html -i sivatechdigital php artisan storage:link
+                '''
+            }
+        }
+
+        stage('Build Frontend Inside Container') {
+            steps {
+                echo "🎨 Building frontend assets inside Docker container..."
+                sh '''
+                    docker exec -w /var/www/html -i sivatechdigital npm install
+                    docker exec -w /var/www/html -i sivatechdigital npm run build
                 '''
             }
         }
