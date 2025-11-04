@@ -50,6 +50,16 @@ pipeline {
             }
         }
 
+        stage('Fix Permissions') {
+            steps {
+                echo "🔐 Setting correct permissions for Laravel..."
+                sh '''
+                    docker exec -i sivatechdigital chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+                    docker exec -i sivatechdigital chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+                '''
+            }
+        }
+
         stage('Run Laravel Commands') {
             steps {
                 echo "🧰 Running composer install & artisan commands..."
