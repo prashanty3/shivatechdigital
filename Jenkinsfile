@@ -7,7 +7,12 @@ pipeline {
     }
 
     stages {
-
+        stage('Cleanup Workspace') {
+            steps {
+                echo "🧹 Cleaning workspace before checkout..."
+                deleteDir()
+            }
+        }
         stage('Checkout') {
             steps {
                 echo "📦 Pulling latest code from GitHub..."
