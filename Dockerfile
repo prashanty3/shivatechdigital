@@ -4,6 +4,10 @@ RUN apt-get update && apt-get install -y \
     git zip unzip libpng-dev libonig-dev libxml2-dev curl \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+
 RUN a2enmod rewrite
 
 COPY . /var/www/html
