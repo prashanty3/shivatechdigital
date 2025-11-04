@@ -14,6 +14,20 @@ pipeline {
             }
         }
 
+        stage('Build Frontend Assets') {
+            steps {
+                echo "🎨 Building frontend assets using Vite..."
+                sh '''
+                    if [ -f package.json ]; then
+                        npm install
+                        npm run build
+                    else
+                        echo "⚠️ No package.json found, skipping frontend build"
+                    fi
+                '''
+            }
+        }
+
         stage('Build Docker Images') {
             steps {
                 echo "🐳 Building Laravel Docker image..."
