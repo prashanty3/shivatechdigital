@@ -7,14 +7,6 @@ pipeline {
     }
 
     stages {
-        stage('Fix Workspace Permissions') {
-            steps {
-                sh '''
-                    echo "🔧 Fixing workspace ownership..."
-                    sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace || true
-                '''
-            }
-        }
         stage('Checkout') {
             steps {
                 echo "📦 Pulling latest code from GitHub..."
