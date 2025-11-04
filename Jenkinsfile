@@ -36,6 +36,20 @@ pipeline {
             }
         }
 
+        stage('Setup Environment File') {
+            steps {
+                echo "⚙️ Checking for .env file..."
+                sh '''
+                    if [ ! -f .env ]; then
+                        echo "📄 .env file not found — copying from .env.example"
+                        cp .env.example .env
+                    else
+                        echo "✅ .env file already exists — skipping copy"
+                    fi
+                '''
+            }
+        }
+
         stage('Run Laravel Commands') {
             steps {
                 echo "🧰 Running composer install & artisan commands..."
