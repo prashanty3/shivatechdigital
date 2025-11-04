@@ -7,10 +7,12 @@ pipeline {
     }
 
     stages {
-        stage('Cleanup Workspace') {
+        stage('Fix Workspace Permissions') {
             steps {
-                echo "🧹 Cleaning workspace before checkout..."
-                deleteDir()
+                sh '''
+                    echo "🔧 Fixing workspace ownership..."
+                    sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace || true
+                '''
             }
         }
         stage('Checkout') {
