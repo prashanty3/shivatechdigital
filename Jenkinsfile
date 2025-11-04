@@ -67,6 +67,10 @@ pipeline {
                     docker exec -i sivatechdigital composer install
                     docker exec -i sivatechdigital php artisan key:generate
                     docker exec -i sivatechdigital php artisan migrate --force
+                    docker exec -i sivatechdigital php artisan config:cache
+                    docker exec -i sivatechdigital php artisan route:cache
+                    docker exec -i sivatechdigital php artisan view:cache
+                    docker exec -i sivatechdigital php artisan storage:link
                 '''
             }
         }
