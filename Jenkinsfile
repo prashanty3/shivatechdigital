@@ -14,16 +14,12 @@ pipeline {
             }
         }
 
-        stage('Build Frontend Assets') {
+        stage('Build Frontend Inside Container') {
             steps {
-                echo "🎨 Building frontend assets using Vite..."
+                echo "🎨 Building frontend assets inside Docker container..."
                 sh '''
-                    if [ -f package.json ]; then
-                        npm install
-                        npm run build
-                    else
-                        echo "⚠️ No package.json found, skipping frontend build"
-                    fi
+                    docker exec -i sivatechdigital npm install
+                    docker exec -i sivatechdigital npm run build
                 '''
             }
         }
