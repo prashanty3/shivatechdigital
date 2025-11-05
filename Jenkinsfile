@@ -102,11 +102,32 @@ pipeline {
     }
 
     post {
+        always {
+            echo "🔄 Cleaning up workspace permissions..."
+            sh '''
+                echo "Attempting to fix workspace permissions..."
+                if sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace/shivatechdigital; then
+                    echo "✅ Permissions updated successfully!"
+                else
+                    echo "⚠️  Permission update failed, but continuing..."
+                fi
+                
+                if sudo chmod -R 755 /var/lib/jenkins/workspace/shivatechdigital; then
+                    echo "✅ Permissions set to 755 successfully!"
+                else
+                    echo "⚠️  Permission modification failed, but continuing..."
+                fi
+            '''
+        }
+        
         success {
             echo "✅ Deployment completed successfully!"
+            sh 'docker-compose ps'
         }
+        
         failure {
             echo "❌ Deployment failed. Check Jenkins logs."
+            sh 'docker-compose logs'
         }
     }
 }
