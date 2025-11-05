@@ -5,11 +5,13 @@ pipeline {
         IMAGE_NAME = "shivatechdigital"
         CONTAINER_NAME = "sivatechdigital"
     }
+    
     stages {
-        stage('Checkout') {
+        stage('Checkout Info') {
             steps {
-                echo "📦 Pulling latest code from GitHub..."
-                git branch: 'main', url: 'https://github.com/prashanty3/shivatechdigital.git', clean: true
+                echo "📦 Code already checked out by Jenkins SCM"
+                sh 'git branch'
+                sh 'git log -1'
             }
         }
 
