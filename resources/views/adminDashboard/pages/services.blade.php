@@ -17,6 +17,8 @@
   </div>
 
   <!-- Success/Error Messages -->
+  <div id="ajaxAlert"></div>
+
   @if(session('success'))
   <div class="alert alert-success bg-success-100 text-success-600 border-success-600 border-start-width-4-px border-top-0 border-end-0 border-bottom-0 px-24 py-13 mb-3 fw-semibold text-lg radius-4 d-flex align-items-center justify-content-between" role="alert">
     <div class="d-flex align-items-center gap-2">
@@ -62,7 +64,7 @@
           <div class="nav-link-content">
             <span class="nav-link-title">Main Services</span>
             <span class="nav-link-desc">
-              <span class="badge bg-primary-600 text-white px-2 py-1 text-xs radius-4">{{ $services->count() }}</span>
+              <span class="badge bg-primary-600 text-white px-2 py-1 text-xs radius-4" id="servicesCount">{{ $services->count() }}</span>
             </span>
           </div>
           <div class="nav-link-indicator"></div>
@@ -77,7 +79,7 @@
           <div class="nav-link-content">
             <span class="nav-link-title">Additional Services</span>
             <span class="nav-link-desc">
-              <span class="badge bg-success-600 text-white px-2 py-1 text-xs radius-4">{{ $additionalServices->count() }}</span>
+              <span class="badge bg-success-600 text-white px-2 py-1 text-xs radius-4" id="additionalCount">{{ $additionalServices->count() }}</span>
             </span>
           </div>
           <div class="nav-link-indicator"></div>
@@ -166,79 +168,8 @@
             </button>
           </div>
           <div class="card-body p-24">
-            <div class="row g-4">
-              @forelse($services as $service)
-              <div class="col-lg-6">
-                <div class="card border h-100">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                      <span class="badge bg-primary-600 text-white">{{ $service->section_badge }}</span>
-                      <div class="d-flex gap-2">
-                        <span class="badge bg-{{ $service->is_active ? 'success' : 'danger' }}-100 text-{{ $service->is_active ? 'success' : 'danger' }}-600">
-                          {{ $service->is_active ? 'Active' : 'Inactive' }}
-                        </span>
-                        @if($service->show_on_homepage)
-                        <span class="badge bg-info-100 text-info-600">Homepage</span>
-                        @endif
-                      </div>
-                    </div>
-                    
-                    @if($service->image)
-                    <img src="{{ asset('storage/' . $service->image) }}" alt="{{ $service->title }}" class="w-100 rounded mb-3" style="height: 150px; object-fit: cover;">
-                    @endif
-                    
-                    <h5 class="mb-2">{{ $service->title }}</h5>
-                    <p class="text-sm text-secondary-light mb-3">{{ Str::limit($service->description, 100) }}</p>
-                    
-                    <!-- Features -->
-                    <div class="mb-3">
-                      <h6 class="text-sm fw-semibold mb-2">Features ({{ $service->features->count() }})</h6>
-                      <div class="d-flex flex-wrap gap-2">
-                        @foreach($service->features->take(3) as $feature)
-                        <span class="badge bg-neutral-100 text-neutral-600 text-xs">
-                          <i class="{{ $feature->icon }}"></i> {{ $feature->title }}
-                        </span>
-                        @endforeach
-                        @if($service->features->count() > 3)
-                        <span class="badge bg-neutral-100 text-neutral-600 text-xs">+{{ $service->features->count() - 3 }} more</span>
-                        @endif
-                      </div>
-                    </div>
-                    
-                    <!-- Technologies -->
-                    <div class="mb-3">
-                      <h6 class="text-sm fw-semibold mb-2">Technologies ({{ $service->technologies->count() }})</h6>
-                      <div class="d-flex flex-wrap gap-2">
-                        @foreach($service->technologies->take(4) as $tech)
-                        <span class="badge bg-warning-100 text-warning-600 text-xs">
-                          @if($tech->icon)<i class="{{ $tech->icon }}"></i>@endif {{ $tech->name }}
-                        </span>
-                        @endforeach
-                        @if($service->technologies->count() > 4)
-                        <span class="badge bg-warning-100 text-warning-600 text-xs">+{{ $service->technologies->count() - 4 }} more</span>
-                        @endif
-                      </div>
-                    </div>
-                    
-                    <div class="d-flex gap-2">
-                      <button type="button" class="btn btn-sm btn-outline-primary-600 flex-fill" onclick='viewService({{ $service->id }})'>
-                        <iconify-icon icon="solar:eye-bold"></iconify-icon> View
-                      </button>
-                      <button type="button" class="btn btn-sm btn-outline-success-600 flex-fill" onclick='editService(@json($service))'>
-                        <iconify-icon icon="solar:pen-bold"></iconify-icon> Edit
-                      </button>
-                      <button type="button" class="btn btn-sm btn-outline-danger-600" onclick="deleteService({{ $service->id }})">
-                        <iconify-icon icon="solar:trash-bin-trash-bold"></iconify-icon>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              @empty
-              <div class="col-12">
-                <p class="text-center text-secondary-light">No services added yet</p>
-              </div>
-              @endforelse
+            <div class="row g-4" id="servicesContainer">
+              @include('adminDashboard.partials.services-list', ['services' => $services])
             </div>
           </div>
         </div>
@@ -255,41 +186,8 @@
             </button>
           </div>
           <div class="card-body p-24">
-            <div class="row g-4">
-              @forelse($additionalServices as $additional)
-              <div class="col-md-4">
-                <div class="card h-100 border">
-                  <div class="card-body text-center">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                      <span class="badge bg-neutral-100 text-neutral-600 text-xs">Order: {{ $additional->order }}</span>
-                      <span class="badge bg-{{ $additional->is_active ? 'success' : 'danger' }}-100 text-{{ $additional->is_active ? 'success' : 'danger' }}-600">
-                        {{ $additional->is_active ? 'Active' : 'Inactive' }}
-                      </span>
-                    </div>
-                    
-                    <div class="bg-primary-100 text-primary-600 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
-                      <i class="{{ $additional->icon }} text-xxl"></i>
-                    </div>
-                    
-                    <h6 class="mb-2">{{ $additional->title }}</h6>
-                    <p class="text-sm text-secondary-light mb-3">{{ Str::limit($additional->description, 80) }}</p>
-                    
-                    <div class="d-flex gap-2 justify-content-center">
-                      <button type="button" class="btn btn-sm btn-outline-primary-600" onclick='editAdditional(@json($additional))'>
-                        <iconify-icon icon="solar:pen-bold"></iconify-icon>
-                      </button>
-                      <button type="button" class="btn btn-sm btn-outline-danger-600" onclick="deleteAdditional({{ $additional->id }})">
-                        <iconify-icon icon="solar:trash-bin-trash-bold"></iconify-icon>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              @empty
-              <div class="col-12">
-                <p class="text-center text-secondary-light">No additional services added yet</p>
-              </div>
-              @endforelse
+            <div class="row g-4" id="additionalServicesContainer">
+              @include('adminDashboard.partials.additional-services-list', ['additionalServices' => $additionalServices])
             </div>
           </div>
         </div>
@@ -352,7 +250,7 @@
 <div class="modal fade" id="addServiceModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <form action="{{ route('services.service.store') }}" method="POST" enctype="multipart/form-data">
+      <form id="addServiceForm" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="modal-header">
           <h5 class="modal-title">Add Main Service</h5>
@@ -392,7 +290,52 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Add Service</button>
+          <button type="submit" class="btn btn-primary" id="addServiceBtn">Add Service</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Additional Service Modal -->
+<div class="modal fade" id="addAdditionalModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="addAdditionalForm" method="POST">
+        @csrf
+        <div class="modal-header">
+          <h5 class="modal-title">Add Additional Service</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Icon <span class="text-danger">*</span></label>
+            <input type="text" name="icon" class="form-control" placeholder="fas fa-paint-brush" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Title <span class="text-danger">*</span></label>
+            <input type="text" name="title" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description <span class="text-danger">*</span></label>
+            <textarea name="description" class="form-control" rows="3" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Link Text</label>
+            <input type="text" name="link_text" class="form-control" value="Learn More">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Link URL</label>
+            <input type="text" name="link_url" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Order <span class="text-danger">*</span></label>
+            <input type="number" name="order" class="form-control" value="0" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="addAdditionalBtn">Add Service</button>
         </div>
       </form>
     </div>
@@ -1012,7 +955,266 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// CSRF Token for AJAX
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+// Show Alert Function
+function showAlert(message, type = 'success') {
+    const alertHtml = `
+        <div class="alert alert-${type} bg-${type}-100 text-${type}-600 border-${type}-600 border-start-width-4-px border-top-0 border-end-0 border-bottom-0 px-24 py-13 mb-3 fw-semibold text-lg radius-4 d-flex align-items-center justify-content-between" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <iconify-icon icon="solar:${type === 'success' ? 'check-circle' : 'danger-circle'}-bold" class="icon text-xl"></iconify-icon>
+                ${message}
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    document.getElementById('ajaxAlert').innerHTML = alertHtml;
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        const alert = document.querySelector('#ajaxAlert .alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+// Add Main Service via AJAX
+document.getElementById('addServiceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = document.getElementById('addServiceBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Adding...';
+    submitBtn.disabled = true;
+    
+    fetch('{{ route("services.service.store") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('addServiceModal')).hide();
+            
+            // Reset form
+            document.getElementById('addServiceForm').reset();
+            
+            // Update services list
+            fetchServices();
+            
+            // Show success message
+            showAlert(data.message || 'Service added successfully!');
+        } else {
+            throw new Error(data.message || 'Failed to add service');
+        }
+    })
+    .catch(error => {
+        showAlert(error.message, 'danger');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+});
+
+// Add Additional Service via AJAX
+document.getElementById('addAdditionalForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = document.getElementById('addAdditionalBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Adding...';
+    submitBtn.disabled = true;
+    
+    fetch('{{ route("services.additional.store") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('addAdditionalModal')).hide();
+            
+            // Reset form
+            document.getElementById('addAdditionalForm').reset();
+            
+            // Update additional services list
+            fetchAdditionalServices();
+            
+            // Show success message
+            showAlert(data.message || 'Additional service added successfully!');
+        } else {
+            throw new Error(data.message || 'Failed to add additional service');
+        }
+    })
+    .catch(error => {
+        showAlert(error.message, 'danger');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+});
+
+// Fetch and update services list
+function fetchServices() {
+    fetch('{{ route("services.index") }}?ajax=1')
+        .then(response => response.text())
+        .then(html => {
+            // Extract services list from response
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const servicesContainer = tempDiv.querySelector('#servicesContainer');
+            
+            if (servicesContainer) {
+                document.getElementById('servicesContainer').innerHTML = servicesContainer.innerHTML;
+                
+                // Update count
+                const servicesCount = tempDiv.querySelector('#servicesCount');
+                if (servicesCount) {
+                    document.getElementById('servicesCount').textContent = servicesCount.textContent;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching services:', error);
+        });
+}
+
+// Fetch and update additional services list
+function fetchAdditionalServices() {
+    fetch('{{ route("services.index") }}?ajax=1')
+        .then(response => response.text())
+        .then(html => {
+            // Extract additional services list from response
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const additionalContainer = tempDiv.querySelector('#additionalServicesContainer');
+            
+            if (additionalContainer) {
+                document.getElementById('additionalServicesContainer').innerHTML = additionalContainer.innerHTML;
+                
+                // Update count
+                const additionalCount = tempDiv.querySelector('#additionalCount');
+                if (additionalCount) {
+                    document.getElementById('additionalCount').textContent = additionalCount.textContent;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching additional services:', error);
+        });
+}
+
+// Update Service via AJAX
+function updateService(serviceId, formData) {
+    return fetch(`/admin/services/service/${serviceId}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'X-HTTP-Method-Override': 'PUT'
+        },
+        body: formData
+    })
+    .then(response => response.json());
+}
+
+// Delete Service via AJAX
+function deleteService(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This will also delete all features and technologies!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/services/service/${id}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-HTTP-Method-Override': 'DELETE',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchServices();
+                    showAlert(data.message || 'Service deleted successfully!');
+                } else {
+                    throw new Error(data.message || 'Failed to delete service');
+                }
+            })
+            .catch(error => {
+                showAlert(error.message, 'danger');
+            });
+        }
+    });
+}
+
+// Delete Additional Service via AJAX
+function deleteAdditional(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/services/additional/${id}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-HTTP-Method-Override': 'DELETE',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchAdditionalServices();
+                    showAlert(data.message || 'Additional service deleted successfully!');
+                } else {
+                    throw new Error(data.message || 'Failed to delete additional service');
+                }
+            })
+            .catch(error => {
+                showAlert(error.message, 'danger');
+            });
+        }
+    });
+}
+
 // Service Functions
 function editService(service) {
   document.getElementById('editServiceForm').action = `/admin/services/service/${service.id}`;
