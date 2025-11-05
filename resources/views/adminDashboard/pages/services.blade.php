@@ -129,7 +129,7 @@
 
               <div class="col-md-12">
                 <label class="form-label fw-semibold text-primary-light text-sm mb-8">Page Subtitle</label>
-                <textarea name="page_subtitle" class="form-control radius-8" rows="3">{{ old('page_subtitle', $services->first()->page_subtitle ?? '') }}</textarea>
+                <textarea name="page_subtitle" class="form-control radius-8" rows="3">{!! old('page_subtitle', $services->first()->page_subtitle ?? '') !!}</textarea>
               </div>
 
               <div class="col-md-4">

@@ -3,481 +3,206 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\Service;
 use App\Models\ServiceFeature;
 use App\Models\ServiceTechnology;
 use App\Models\AdditionalService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ServiceController extends Controller
 {
+    /* -------------------- PAGE MAIN VIEW -------------------- */
     public function index(Request $request)
     {
-        $services = Service::with(['features', 'technologies'])->ordered()->get();
-        $additionalServices = AdditionalService::ordered()->get();
-        
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'services' => $services,
-                'additionalServices' => $additionalServices
-            ]);
+        $services = Service::with(['features', 'technologies'])->orderBy('order')->get();
+        $additionalServices = AdditionalService::orderBy('order')->get();
+
+        // If AJAX request -> return only HTML portion for refreshing UI
+        if ($request->ajax()) {
+            return view('adminDashboard.pages.services-list', compact('services'))->render();
         }
-        
+
         return view('adminDashboard.pages.services', compact('services', 'additionalServices'));
     }
 
+    /* -------------------- UPDATE PAGE HEADER & CTA -------------------- */
     public function update(Request $request)
     {
-        $validated = $request->validate([
-            'page_badge' => 'nullable|string|max:255',
-            'page_title' => 'nullable|string|max:255',
-            'page_subtitle' => 'nullable|string',
-            'services_offered' => 'nullable|integer',
-            'client_satisfaction' => 'nullable|integer',
-            'support_availability' => 'nullable|string|max:255',
-            'cta_title' => 'nullable|string|max:255',
-            'cta_subtitle' => 'nullable|string',
-            'cta_primary_button_text' => 'nullable|string|max:255',
-            'cta_primary_button_url' => 'nullable|string|max:255',
-            'cta_secondary_button_text' => 'nullable|string|max:255',
-            'cta_secondary_button_url' => 'nullable|string|max:255',
+        $request->validate([
+            'page_badge' => 'required',
+            'page_title' => 'required',
         ]);
 
+        // Get first record (this holds page header settings)
         $service = Service::first();
-        if ($service) {
-            $service->update($validated);
-        }
 
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Services page updated successfully!'
+        // If no service exists, create a dummy header holder row
+        if (!$service) {
+            $service = Service::create([
+                'slug' => 'service-page-header', // must be unique
+                'section_badge' => 'Header',
+                'title' => 'Page Header Container',
+                'description' => 'This record stores page header and CTA settings. Do not delete.',
+                'is_active' => false,
+                'show_on_homepage' => false,
             ]);
         }
 
-        return redirect()->back()->with('success', 'Services page updated successfully!');
+        // Now update header + CTA fields
+        $service->update([
+            'page_badge' => $request->page_badge,
+            'page_title' => $request->page_title,
+            'page_subtitle' => $request->page_subtitle,
+            'services_offered' => $request->services_offered,
+            'client_satisfaction' => $request->client_satisfaction,
+            'support_availability' => $request->support_availability,
+            'cta_title' => $request->cta_title,
+            'cta_subtitle' => $request->cta_subtitle,
+            'cta_primary_button_text' => $request->cta_primary_button_text,
+            'cta_primary_button_url' => $request->cta_primary_button_url,
+            'cta_secondary_button_text' => $request->cta_secondary_button_text,
+            'cta_secondary_button_url' => $request->cta_secondary_button_url,
+        ]);
+
+        return back()->with('success', 'Services Page Updated Successfully ✅');
     }
+
+
+    /* -------------------- MAIN SERVICE CRUD -------------------- */
 
     public function storeService(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'section_badge' => 'required|string|max:255',
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'image' => 'nullable|image|max:2048',
-                'button_text' => 'nullable|string|max:255',
-                'button_url' => 'nullable|string|max:255',
-                'order' => 'required|integer',
-            ]);
+        $request->validate([
+            'section_badge' => 'required',
+            'title' => 'required',
+            'description' => 'required',
+            'order' => 'required|numeric',
+        ]);
 
-            $validated['slug'] = Str::slug($validated['title']);
-            $validated['is_active'] = true;
+        $data = $request->only(['section_badge', 'title', 'description', 'order', 'button_text', 'button_url']);
+        $data['is_active'] = 1;
 
-            if ($request->hasFile('image')) {
-                $validated['image'] = $request->file('image')->store('services', 'public');
-            }
-
-            $service = Service::create($validated);
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Service added successfully!',
-                    'service' => $service->load(['features', 'technologies'])
-                ]);
-            }
-            
-            return redirect()->back()->with('success', 'Service added successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to add service: ' . $e->getMessage()
-                ], 500);
-            }
-            
-            return redirect()->back()->with('error', 'Failed to add service');
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('services', 'public');
         }
+
+        Service::create($data);
+
+        return response()->json(['success' => true, 'message' => 'Service Added Successfully ✅']);
     }
 
     public function updateService(Request $request, Service $service)
     {
-        try {
-            $validated = $request->validate([
-                'section_badge' => 'required|string|max:255',
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'image' => 'nullable|image|max:2048',
-                'button_text' => 'nullable|string|max:255',
-                'button_url' => 'nullable|string|max:255',
-                'order' => 'required|integer',
-                'is_active' => 'boolean',
-                'show_on_homepage' => 'boolean',
+        $request->validate([
+            'section_badge' => 'required',
+            'title' => 'required',
+            'description' => 'required',
+            'order' => 'required|numeric',
+        ]);
+
+        if ($request->hasFile('image')) {
+            if ($service->image) Storage::disk('public')->delete($service->image);
+            $service->image = $request->file('image')->store('services', 'public');
+        }
+
+        $service->update([
+            'section_badge' => $request->section_badge,
+            'title' => $request->title,
+            'description' => $request->description,
+            'button_text' => $request->button_text,
+            'button_url' => $request->button_url,
+            'order' => $request->order,
+            'is_active' => $request->has('is_active'),
+            'show_on_homepage' => $request->has('show_on_homepage'),
+        ]);
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Service Updated Successfully ✅'
             ]);
-
-            $validated['slug'] = Str::slug($validated['title']);
-            $validated['is_active'] = $request->has('is_active');
-            $validated['show_on_homepage'] = $request->has('show_on_homepage');
-
-            if ($request->hasFile('image')) {
-                if ($service->image) {
-                    Storage::disk('public')->delete($service->image);
-                }
-                $validated['image'] = $request->file('image')->store('services', 'public');
-            }
-
-            $service->update($validated);
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Service updated successfully!',
-                    'service' => $service->load(['features', 'technologies'])
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Service updated successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to update service: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to update service');
         }
+
+        return back()->with('success', 'Service Updated Successfully ✅');
+
+        
     }
 
-    public function destroyService(Request $request, Service $service)
+    public function deleteService(Service $service)
     {
-        try {
-            if ($service->image) {
-                Storage::disk('public')->delete($service->image);
-            }
-            
-            $service->delete();
+        if ($service->image) Storage::disk('public')->delete($service->image);
 
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Service deleted successfully!'
-                ]);
-            }
+        $service->features()->delete();
+        $service->technologies()->delete();
+        $service->delete();
 
-            return redirect()->back()->with('success', 'Service deleted successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to delete service: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to delete service');
-        }
+        return response()->json(['success' => true, 'message' => 'Service Deleted Successfully ✅']);
     }
 
-    // Feature Methods
+    public function view(Service $service)
+    {
+        return response()->json([
+            'service' => $service->load('features', 'technologies')
+        ]);
+    }
+
+    /* -------------------- FEATURE CRUD -------------------- */
+
     public function storeFeature(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'service_id' => 'required|exists:services,id',
-                'icon' => 'required|string|max:255',
-                'title' => 'required|string|max:255',
-                'description' => 'nullable|string|max:255',
-                'order' => 'required|integer',
-            ]);
-
-            $feature = ServiceFeature::create($validated);
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Feature added successfully!',
-                    'feature' => $feature
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Feature added successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to add feature: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to add feature');
-        }
+        ServiceFeature::create($request->all());
+        return back()->with('success', 'Feature Added ✅');
     }
 
     public function updateFeature(Request $request, ServiceFeature $feature)
     {
-        try {
-            $validated = $request->validate([
-                'icon' => 'required|string|max:255',
-                'title' => 'required|string|max:255',
-                'description' => 'nullable|string|max:255',
-                'order' => 'required|integer',
-                'is_active' => 'boolean',
-            ]);
-
-            $validated['is_active'] = $request->has('is_active');
-
-            $feature->update($validated);
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Feature updated successfully!',
-                    'feature' => $feature
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Feature updated successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to update feature: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to update feature');
-        }
+        $feature->update($request->all());
+        return back()->with('success', 'Feature Updated ✅');
     }
 
-    public function destroyFeature(Request $request, ServiceFeature $feature)
+    public function deleteFeature(ServiceFeature $feature)
     {
-        try {
-            $feature->delete();
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Feature deleted successfully!'
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Feature deleted successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to delete feature: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to delete feature');
-        }
+        $feature->delete();
+        return back()->with('success', 'Feature Deleted ✅');
     }
 
-    // Technology Methods
+    /* -------------------- TECHNOLOGY CRUD -------------------- */
+
     public function storeTechnology(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'service_id' => 'required|exists:services,id',
-                'name' => 'required|string|max:255',
-                'icon' => 'nullable|string|max:255',
-                'order' => 'required|integer',
-            ]);
-
-            $technology = ServiceTechnology::create($validated);
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Technology added successfully!',
-                    'technology' => $technology
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Technology added successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to add technology: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to add technology');
-        }
+        ServiceTechnology::create($request->all());
+        return back()->with('success', 'Technology Added ✅');
     }
 
     public function updateTechnology(Request $request, ServiceTechnology $technology)
     {
-        try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'icon' => 'nullable|string|max:255',
-                'order' => 'required|integer',
-                'is_active' => 'boolean',
-            ]);
-
-            $validated['is_active'] = $request->has('is_active');
-
-            $technology->update($validated);
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Technology updated successfully!',
-                    'technology' => $technology
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Technology updated successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to update technology: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to update technology');
-        }
+        $technology->update($request->all());
+        return back()->with('success', 'Technology Updated ✅');
     }
 
-    public function destroyTechnology(Request $request, ServiceTechnology $technology)
+    public function deleteTechnology(ServiceTechnology $technology)
     {
-        try {
-            $technology->delete();
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Technology deleted successfully!'
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Technology deleted successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to delete technology: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to delete technology');
-        }
+        $technology->delete();
+        return back()->with('success', 'Technology Deleted ✅');
     }
 
-    // Additional Service Methods
+    /* -------------------- ADDITIONAL SERVICE CRUD -------------------- */
+
     public function storeAdditional(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'icon' => 'required|string|max:255',
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'link_text' => 'nullable|string|max:255',
-                'link_url' => 'nullable|string|max:255',
-                'order' => 'required|integer',
-            ]);
-
-            $additional = AdditionalService::create($validated);
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Additional service added successfully!',
-                    'additional' => $additional
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Additional service added successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to add additional service: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to add additional service');
-        }
+        AdditionalService::create($request->all());
+        return response()->json(['success' => true, 'message' => 'Additional Service Added ✅']);
     }
 
-    public function updateAdditional(Request $request, AdditionalService $additional)
+    public function updateAdditional(Request $request, AdditionalService $additionalService)
     {
-        try {
-            $validated = $request->validate([
-                'icon' => 'required|string|max:255',
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'link_text' => 'nullable|string|max:255',
-                'link_url' => 'nullable|string|max:255',
-                'order' => 'required|integer',
-                'is_active' => 'boolean',
-            ]);
-
-            $validated['is_active'] = $request->has('is_active');
-
-            $additional->update($validated);
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Additional service updated successfully!',
-                    'additional' => $additional
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Additional service updated successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to update additional service: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to update additional service');
-        }
+        $additionalService->update($request->all());
+        return response()->json(['success' => true, 'message' => 'Additional Service Updated ✅']);
     }
 
-    public function destroyAdditional(Request $request, AdditionalService $additional)
+    public function deleteAdditional(AdditionalService $additionalService)
     {
-        try {
-            $additional->delete();
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Additional service deleted successfully!'
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Additional service deleted successfully!');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to delete additional service: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Failed to delete additional service');
-        }
-    }
-
-    public function viewService(Service $service)
-    {
-        $service->load(['features' => function($query) {
-            $query->orderBy('order');
-        }, 'technologies' => function($query) {
-            $query->orderBy('order');
-        }]);
-        
-        return response()->json(['service' => $service]);
+        $additionalService->delete();
+        return response()->json(['success' => true, 'message' => 'Additional Service Deleted ✅']);
     }
 }

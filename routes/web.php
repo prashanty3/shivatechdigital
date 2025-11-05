@@ -27,7 +27,7 @@ Route::get('portfolio', function () {
 })->name('portfolio'); 
 
 
-Route::view('adminDashboard.pages.homepage', 'dashboard')
+Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -93,28 +93,24 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/admin/about/value/{coreValue}', [AboutPageController::class, 'updateCoreValue'])->name('about.value.update');
     Route::delete('/admin/about/value/{coreValue}', [AboutPageController::class, 'deleteCoreValue'])->name('about.value.delete');
 
-
     Route::get('/admin/services', [ServiceController::class, 'index'])->name('services.index');
     Route::post('/admin/services/update', [ServiceController::class, 'update'])->name('services.update');
-    
-    // Main Services
-    Route::get('/admin/services/service/{service}/view', [ServiceController::class, 'viewService'])->name('services.service.view');
+
     Route::post('/admin/services/service/store', [ServiceController::class, 'storeService'])->name('services.service.store');
     Route::put('/admin/services/service/{service}', [ServiceController::class, 'updateService'])->name('services.service.update');
-    Route::delete('/admin/services/service/{service}', [ServiceController::class, 'destroyService'])->name('services.service.destroy');
-    
-    // Features
+    Route::delete('/admin/services/service/{service}', [ServiceController::class, 'deleteService'])->name('services.service.delete');
+    Route::get('/admin/services/service/{service}/view', [ServiceController::class, 'view']);
+
     Route::post('/admin/services/feature/store', [ServiceController::class, 'storeFeature'])->name('services.feature.store');
-    Route::put('/admin/services/feature/{feature}', [ServiceController::class, 'updateFeature'])->name('services.feature.update');
-    Route::delete('/admin/services/feature/{feature}', [ServiceController::class, 'destroyFeature'])->name('services.feature.destroy');
-    
-    // Technologies
+    Route::put('/admin/services/feature/{feature}', [ServiceController::class, 'updateFeature']);
+    Route::delete('/admin/services/feature/{feature}', [ServiceController::class, 'deleteFeature']);
+
     Route::post('/admin/services/technology/store', [ServiceController::class, 'storeTechnology'])->name('services.technology.store');
-    Route::put('/admin/services/technology/{technology}', [ServiceController::class, 'updateTechnology'])->name('services.technology.update');
-    Route::delete('/admin/services/technology/{technology}', [ServiceController::class, 'destroyTechnology'])->name('services.technology.destroy');
-    
-    // Additional Services
+    Route::put('/admin/services/technology/{technology}', [ServiceController::class, 'updateTechnology']);
+    Route::delete('/admin/services/technology/{technology}', [ServiceController::class, 'deleteTechnology']);
+
     Route::post('/admin/services/additional/store', [ServiceController::class, 'storeAdditional'])->name('services.additional.store');
-    Route::put('/admin/services/additional/{additional}', [ServiceController::class, 'updateAdditional'])->name('services.additional.update');
-    Route::delete('/admin/services/additional/{additional}', [ServiceController::class, 'destroyAdditional'])->name('services.additional.destroy');
+    Route::put('/admin/services/additional/{additionalService}', [ServiceController::class, 'updateAdditional']);
+    Route::delete('/admin/services/additional/{additionalService}', [ServiceController::class, 'deleteAdditional']);
+
 });
