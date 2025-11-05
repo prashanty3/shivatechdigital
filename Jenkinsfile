@@ -9,8 +9,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo "📦 Pulling latest code from GitHub..."
-                git branch: 'main', url: 'https://github.com/prashanty3/shivatechdigital.git',
-                clean: true
+                git branch: 'main', url: 'https://github.com/prashanty3/shivatechdigital.git', clean: true
             }
         }
 
