@@ -6,6 +6,10 @@ pipeline {
         CONTAINER_NAME = "sivatechdigital"
     }
 
+    triggers {
+        githubPush()
+    }
+
     stages {
         stage('Prepare Workspace') {
             steps {
