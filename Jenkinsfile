@@ -8,6 +8,12 @@ pipeline {
 
     stages {
 
+        stage('remove old workspace') {
+            steps {
+                echo "🧹 Cleaning up old workspace..."
+                sh 'sudo rm -rf /var/lib/jenkins/workspace/shivatechdigital || true'
+            }
+        }
         stage('Checkout') {
             steps {
                 echo "📦 Pulling latest code from GitHub..."
