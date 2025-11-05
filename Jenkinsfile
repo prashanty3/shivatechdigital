@@ -6,14 +6,9 @@ pipeline {
         CONTAINER_NAME = "sivatechdigital"
     }
     stages {
-        stage('Clean Workspace') {
-            steps {
-                // Install the "Workspace Cleanup" plugin first
-                cleanWs() 
-            }
-        }
         stage('Checkout') {
             steps {
+                deleteDir() // This deletes the entire workspace, ensuring clean state
                 echo "📦 Pulling latest code from GitHub..."
                 git branch: 'main', url: 'https://github.com/prashanty3/shivatechdigital.git'
             }
