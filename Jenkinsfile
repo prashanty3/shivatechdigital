@@ -7,13 +7,13 @@ pipeline {
     }
 
     stages {
-        stage('Remove Old Workspace') {
+
+        stage('remove old workspace') {
             steps {
                 echo "🧹 Cleaning up old workspace..."
                 sh 'sudo rm -rf /var/lib/jenkins/workspace/shivatechdigital || true'
             }
         }
-        
         stage('Checkout') {
             steps {
                 echo "📦 Pulling latest code from GitHub..."
@@ -35,56 +35,23 @@ pipeline {
             }
         }
 
-        stage('Start Database') {
+        stage('Run Containers') {
             steps {
-                echo "🚀 Starting database container..."
-                sh 'docker-compose up -d db'
-            }
-        }
-
-        stage('Wait for MySQL') {
-            steps {
-                echo "⏳ Waiting for MySQL to be ready..."
-                sh '''
-                    echo "Waiting for MySQL connection..."
-                    counter=0
-                    until docker-compose exec -T db mysql -u user -pshivatechdigital -e "SELECT 1;" &> /dev/null; do
-                        counter=$((counter+1))
-                        if [ $counter -gt 30 ]; then
-                            echo "❌ MySQL failed to start within 150 seconds"
-                            docker-compose logs db
-                            exit 1
-                        fi
-                        echo "Waiting for MySQL... attempt $counter/30"
-                        sleep 5
-                    done
-                    echo "✅ MySQL is ready!"
-                '''
-            }
-        }
-
-        stage('Start Application') {
-            steps {
-                echo "🚀 Starting application container..."
-                sh 'docker-compose up -d app'
-                sh 'sleep 10'  # Wait for Apache to start
+                echo "🚀 Starting new containers..."
+                sh 'docker-compose up -d'
             }
         }
 
         stage('Setup Environment File') {
             steps {
-                echo "⚙️ Setting up environment file..."
+                echo "⚙️ Checking for .env file..."
                 sh '''
-                    # Copy .env file inside container
-                    docker exec -w /var/www/html -i sivatechdigital cp .env.example .env || true
-                    
-                    # Set database configuration in .env
-                    docker exec -w /var/www/html -i sivatechdigital bash -c "
-                        sed -i 's/DB_HOST=.*/DB_HOST=db/g' .env
-                        sed -i 's/DB_DATABASE=.*/DB_DATABASE=shivatechdigital/g' .env
-                        sed -i 's/DB_USERNAME=.*/DB_USERNAME=user/g' .env
-                        sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=shivatechdigital/g' .env
-                    "
+                    if [ ! -f .env ]; then
+                        echo "📄 .env file not found — copying from .env.example"
+                        cp .env.example .env
+                    else
+                        echo "✅ .env file already exists — skipping copy"
+                    fi
                 '''
             }
         }
@@ -99,21 +66,14 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                echo "📦 Installing PHP and Node dependencies..."
-                sh '''
-                    docker exec -w /var/www/html -i sivatechdigital composer install --no-dev --optimize-autoloader
-                    docker exec -w /var/www/html -i sivatechdigital npm ci
-                '''
-            }
-        }
-
         stage('Run Laravel Commands') {
             steps {
-                echo "🧰 Running Laravel setup commands..."
+                echo "🧰 Running composer install & artisan commands..."
                 sh '''
-                    docker exec -w /var/www/html -i sivatechdigital php artisan key:generate --force
+                    docker exec -w /var/www/html -i sivatechdigital composer install
+                    echo "⏳ Waiting for MySQL to initialize..."
+                    sleep 20
+                    docker exec -w /var/www/html -i sivatechdigital php artisan key:generate
                     docker exec -w /var/www/html -i sivatechdigital php artisan migrate --force
                     docker exec -w /var/www/html -i sivatechdigital php artisan config:cache
                     docker exec -w /var/www/html -i sivatechdigital php artisan route:cache
@@ -123,10 +83,11 @@ pipeline {
             }
         }
 
-        stage('Build Frontend') {
+        stage('Build Frontend Inside Container') {
             steps {
-                echo "🎨 Building frontend assets..."
+                echo "🎨 Building frontend assets inside Docker container..."
                 sh '''
+                    docker exec -w /var/www/html -i sivatechdigital npm install
                     docker exec -w /var/www/html -i sivatechdigital npm run build
                 '''
             }
@@ -143,11 +104,9 @@ pipeline {
     post {
         success {
             echo "✅ Deployment completed successfully!"
-            sh 'docker-compose ps'
         }
         failure {
             echo "❌ Deployment failed. Check Jenkins logs."
-            sh 'docker-compose logs'
         }
     }
 }
