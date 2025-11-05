@@ -5,11 +5,6 @@ pipeline {
         IMAGE_NAME = "shivatechdigital"
         CONTAINER_NAME = "sivatechdigital"
     }
-
-    triggers {
-        githubPush()
-    }
-
     stages {
         stage('Prepare Workspace') {
             steps {
