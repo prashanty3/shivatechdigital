@@ -12,9 +12,8 @@ pipeline {
                 script {
                     echo "🧹 Cleaning workspace with proper permissions..."
                     sh '''
-                        # Force clean with sudo
-                        sudo rm -rf ${WORKSPACE}/* ${WORKSPACE}/.[!.]* || true
-                        sudo chown -R jenkins:jenkins ${WORKSPACE}
+                        chown -R jenkins:jenkins /var/lib/jenkins/workspace/shivatechdigital
+                        chmod -R 755 /var/lib/jenkins/workspace/shivatechdigital
                     '''
                 }
             }
