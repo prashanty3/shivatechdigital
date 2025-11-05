@@ -49,25 +49,28 @@ class ServiceController extends Controller
 
     public function storeService(Request $request)
     {
-        $validated = $request->validate([
-            'section_badge' => 'required|string|max:255',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'image' => 'nullable|image|max:2048',
-            'button_text' => 'nullable|string|max:255',
-            'button_url' => 'nullable|string|max:255',
-            'order' => 'required|integer',
-        ]);
-
-        $validated['slug'] = Str::slug($validated['title']);
-
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('services', 'public');
+        try {
+            $service = Service::create($request->all());
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Service added successfully!',
+                    'service' => $service
+                ]);
+            }
+            
+            return redirect()->back()->with('success', 'Service added successfully!');
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to add service: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Failed to add service');
         }
-
-        Service::create($validated);
-
-        return redirect()->back()->with('success', 'Service added successfully!');
     }
 
     public function updateService(Request $request, Service $service)

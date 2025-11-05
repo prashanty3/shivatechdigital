@@ -169,7 +169,7 @@
           </div>
           <div class="card-body p-24">
             <div class="row g-4" id="servicesContainer">
-              @include('adminDashboard.partials.services-list', ['services' => $services])
+              @include('adminDashboard.services-list', ['services' => $services])
             </div>
           </div>
         </div>
@@ -187,7 +187,7 @@
           </div>
           <div class="card-body p-24">
             <div class="row g-4" id="additionalServicesContainer">
-              @include('adminDashboard.partials.additional-services-list', ['additionalServices' => $additionalServices])
+              @include('adminDashboard.additional-services-list', ['additionalServices' => $additionalServices])
             </div>
           </div>
         </div>
