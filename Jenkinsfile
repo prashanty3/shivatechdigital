@@ -7,11 +7,13 @@ pipeline {
     }
 
     stages {
-
-        stage('Remove Old Workspace') {
+        stage('Prepare Workspace') {
             steps {
-                echo "🧹 Cleaning up old workspace..."
-                deleteDir()
+                sh '''
+                echo "Fixing permissions..."
+                sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace/shivatechdigital || true
+                sudo chmod -R 775 /var/lib/jenkins/workspace/shivatechdigital || true
+                '''
             }
         }
         stage('Checkout') {
