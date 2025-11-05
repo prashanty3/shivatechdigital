@@ -49,9 +49,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/contacts/bulk-status', [ContactManagementController::class, 'bulkUpdateStatus'])->name('contacts.bulk-status');
 
         // Settings Routes
-    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
-    Route::post('/settings/reset', [SettingController::class, 'reset'])->name('settings.reset');
+    Route::get('/sitesettings', [SettingController::class, 'index'])->name('settings.index');
+    Route::post('/sitesettings', [SettingController::class, 'update'])->name('settings.update');
+    Route::post('/sitesettings/reset', [SettingController::class, 'reset'])->name('settings.reset');
     
     // Route::get('sitedetails', function () {
     //     return view('adminDashboard.pages.sitedetails');
