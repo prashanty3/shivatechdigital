@@ -8,20 +8,6 @@ pipeline {
 
     stages {
 
-        stage('Preparation') {
-            steps {
-                echo "🔧 Preparing workspace..."
-                deleteDir()
-            }
-        }
-
-        stage('Checkout') {
-            steps {
-                echo "📦 Pulling latest code from GitHub..."
-                git branch: 'main', url: 'https://github.com/prashanty3/shivatechdigital.git'
-            }
-        }
-
         stage('Build Docker Images') {
             steps {
                 echo "🐳 Building Laravel Docker image..."
