@@ -20,6 +20,6 @@ class ServicePageController extends Controller
             ->get();
         $additionalServices = AdditionalService::active()->ordered()->get();
 
-        return view('website.services', compact('pageData', 'services', 'additionalServices'));
+        return view('website.pages.services', compact('pageData', 'services', 'additionalServices'));
     }
 }

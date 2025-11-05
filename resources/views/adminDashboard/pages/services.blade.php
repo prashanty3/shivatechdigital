@@ -99,7 +99,7 @@
     </ul>
   </div>
 
-  <form action="{{ route('admin.services.update') }}" method="POST" enctype="multipart/form-data">
+  <form action="{{ route('services.update') }}" method="POST" enctype="multipart/form-data">
     @csrf
     
     <div class="tab-content" id="pills-tabContent">
@@ -352,7 +352,7 @@
 <div class="modal fade" id="addServiceModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <form action="{{ route('admin.services.service.store') }}" method="POST" enctype="multipart/form-data">
+      <form action="{{ route('services.service.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="modal-header">
           <h5 class="modal-title">Add Main Service</h5>
@@ -483,7 +483,7 @@
 <div class="modal fade" id="addFeatureModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form action="{{ route('admin.services.feature.store') }}" method="POST">
+      <form action="{{ route('services.feature.store') }}" method="POST">
         @csrf
         <input type="hidden" name="service_id" id="feature_service_id">
         <div class="modal-header">
@@ -563,7 +563,7 @@
 <div class="modal fade" id="addTechnologyModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form action="{{ route('admin.services.technology.store') }}" method="POST">
+      <form action="{{ route('services.technology.store') }}" method="POST">
         @csrf
         <input type="hidden" name="service_id" id="technology_service_id">
         <div class="modal-header">
@@ -635,7 +635,7 @@
 <div class="modal fade" id="addAdditionalModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form action="{{ route('admin.services.additional.store') }}" method="POST">
+      <form action="{{ route('services.additional.store') }}" method="POST">
         @csrf
         <div class="modal-header">
           <h5 class="modal-title">Add Additional Service</h5>
