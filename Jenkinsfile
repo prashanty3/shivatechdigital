@@ -7,15 +7,10 @@ pipeline {
     }
 
     stages {
-        stage('Prepare') {
+        stage('Clean Workspace') {
             steps {
-                script {
-                    echo "🧹 Cleaning workspace with proper permissions..."
-                    sh '''
-                        chown -R jenkins:jenkins /var/lib/jenkins/workspace/shivatechdigital
-                        chmod -R 755 /var/lib/jenkins/workspace/shivatechdigital
-                    '''
-                }
+                echo "🧹 Cleaning workspace..."
+                cleanWs()
             }
         }
 

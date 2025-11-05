@@ -18,7 +18,7 @@ class ServiceController extends Controller
         $services = Service::with(['features', 'technologies'])->ordered()->get();
         $additionalServices = AdditionalService::ordered()->get();
         
-        return view('adminDashboard.services.index', compact('services', 'additionalServices'));
+        return view('adminDashboard.pages.services', compact('services', 'additionalServices'));
     }
 
     public function update(Request $request)
