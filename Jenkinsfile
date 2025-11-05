@@ -8,12 +8,6 @@ pipeline {
 
     stages {
 
-        stage('remove old workspace') {
-            steps {
-                echo "🧹 Cleaning up old workspace..."
-                sh 'sudo rm -rf /var/lib/jenkins/workspace/shivatechdigital || true'
-            }
-        }
         stage('Checkout') {
             steps {
                 echo "📦 Pulling latest code from GitHub..."
@@ -71,8 +65,6 @@ pipeline {
                 echo "🧰 Running composer install & artisan commands..."
                 sh '''
                     docker exec -w /var/www/html -i sivatechdigital composer install
-                    echo "⏳ Waiting for MySQL to initialize..."
-                    sleep 20
                     docker exec -w /var/www/html -i sivatechdigital php artisan key:generate
                     docker exec -w /var/www/html -i sivatechdigital php artisan migrate --force
                     docker exec -w /var/www/html -i sivatechdigital php artisan config:cache
