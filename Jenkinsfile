@@ -5,7 +5,16 @@ pipeline {
         IMAGE_NAME = "shivatechdigital"
         CONTAINER_NAME = "sivatechdigital"
     }
+
     stages {
+
+        stage('Preparation') {
+            steps {
+                echo "🔧 Preparing workspace..."
+                deleteDir()
+            }
+        }
+
         stage('Checkout') {
             steps {
                 echo "📦 Pulling latest code from GitHub..."
