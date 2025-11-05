@@ -8,11 +8,8 @@ pipeline {
     stages {
         stage('Prepare Workspace') {
             steps {
-                sh '''
-                    echo "Fixing permissions..."
-                    sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace/shivatechdigital
-                    sudo chmod -R 775 /var/lib/jenkins/workspace/shivatechdigital
-                '''
+                sh 'sudo chmod -R 777 /var/lib/jenkins/workspace/shivatechdigital'
+                sh 'sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace/shivatechdigital'
             }
         }
         stage('Checkout') {
