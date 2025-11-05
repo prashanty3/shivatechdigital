@@ -8,9 +8,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                deleteDir() // This deletes the entire workspace, ensuring clean state
                 echo "📦 Pulling latest code from GitHub..."
-                git branch: 'main', url: 'https://github.com/prashanty3/shivatechdigital.git'
+                git branch: 'main', url: 'https://github.com/prashanty3/shivatechdigital.git',
+                clean: true
             }
         }
 
