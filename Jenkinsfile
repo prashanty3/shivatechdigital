@@ -6,10 +6,10 @@ pipeline {
         CONTAINER_NAME = "sivatechdigital"
     }
     stages {
-        stage('Prepare Workspace') {
+        stage('Clean Workspace') {
             steps {
-                sh 'sudo chmod -R 777 /var/lib/jenkins/workspace/shivatechdigital'
-                sh 'sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace/shivatechdigital'
+                // Install the "Workspace Cleanup" plugin first
+                cleanWs() 
             }
         }
         stage('Checkout') {
