@@ -31,7 +31,7 @@ pipeline {
         stage('Stop Old Containers') {
             steps {
                 echo "🧹 Stopping old containers if running..."
-                sh 'sudo rm -rf /var/lib/jenkins/workspace/shivatechdigital || true'
+                sh 'docker-compose down || true'
             }
         }
 
