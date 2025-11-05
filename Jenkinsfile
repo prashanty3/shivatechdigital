@@ -72,6 +72,7 @@ pipeline {
                 sh '''
                     docker exec -w /var/www/html -i sivatechdigital composer install
                     docker exec -w /var/www/html -i sivatechdigital php artisan key:generate
+                    sleep 20
                     docker exec -w /var/www/html -i sivatechdigital php artisan migrate --force
                     docker exec -w /var/www/html -i sivatechdigital php artisan config:cache
                     docker exec -w /var/www/html -i sivatechdigital php artisan route:cache
