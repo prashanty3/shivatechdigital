@@ -11,7 +11,7 @@ pipeline {
         stage('Remove Old Workspace') {
             steps {
                 echo "🧹 Cleaning up old workspace..."
-                sh 'rm -rf /var/lib/jenkins/workspace/shivatechdigital || true'
+                deleteDir()
             }
         }
         stage('Checkout') {
