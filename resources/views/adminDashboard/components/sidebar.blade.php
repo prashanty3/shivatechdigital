@@ -37,6 +37,12 @@
           <span>About Us</span>
         </a>
       </li>
+      <li class="{{ request()->routeIs('services.index') ? 'active-page' : '' }} mb-2">
+        <a href="{{ route('services.index') }}" class="{{ request()->routeIs('services.index') ? 'active-page' : '' }}">
+            <iconify-icon icon="mage:service" class="menu-icon"></iconify-icon>
+            <span>Services Page</span>
+        </a>
+      </li>
       <!-- <li class="dropdown">
         <a href="javascript:void(0)">
           <iconify-icon icon="solar:home-smile-angle-outline" class="menu-icon"></iconify-icon>
