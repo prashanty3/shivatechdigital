@@ -7,6 +7,25 @@ pipeline {
     }
 
     stages {
+        stage('Prepare') {
+            steps {
+                script {
+                    echo "🧹 Cleaning workspace with proper permissions..."
+                    sh '''
+                        # Force clean with sudo
+                        sudo rm -rf ${WORKSPACE}/* ${WORKSPACE}/.[!.]* || true
+                        sudo chown -R jenkins:jenkins ${WORKSPACE}
+                    '''
+                }
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                echo "📦 Pulling latest code from GitHub..."
+                git branch: 'main', url: 'https://github.com/prashanty3/shivatechdigital.git'
+            }
+        }
 
         stage('Build Docker Images') {
             steps {
