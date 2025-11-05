@@ -472,7 +472,7 @@
                       {{ $member->is_active ? 'Active' : 'Inactive' }}
                     </span>
                     <div class="d-flex gap-2 justify-content-center">
-                      <button type="button" class="btn btn-sm btn-outline-primary-600" onclick="editTeamMember({{ $member }})">
+                      <button type="button" class="btn btn-sm btn-outline-primary-600" onclick='editTeamMember(@json($member))'>
                         <iconify-icon icon="solar:pen-bold"></iconify-icon>
                       </button>
                       <button type="button" class="btn btn-sm btn-outline-danger-600" onclick="deleteTeamMember({{ $member->id }})">
@@ -1202,16 +1202,19 @@ function editTeamMember(member) {
   document.getElementById('edit_team_twitter').value = member.twitter_url || '';
   document.getElementById('edit_team_email').value = member.email || '';
   document.getElementById('edit_team_order').value = member.order;
-  document.getElementById('edit_team_active').checked = member.is_active;
-  
+  document.getElementById('edit_team_active').checked = !!member.is_active;
+
   if (member.image) {
     document.getElementById('edit_team_current_image').innerHTML = `
       <img src="/storage/${member.image}" alt="${member.name}" style="max-width: 100px;" class="rounded">
     `;
+  } else {
+    document.getElementById('edit_team_current_image').innerHTML = '';
   }
-  
+
   new bootstrap.Modal(document.getElementById('editTeamModal')).show();
 }
+
 
 function deleteTeamMember(id) {
   Swal.fire({
@@ -1227,10 +1230,20 @@ function deleteTeamMember(id) {
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = `/admin/about/team/${id}`;
-      form.innerHTML = `
-        @csrf
-        @method('DELETE')
-      `;
+
+      const csrf = document.createElement('input');
+      csrf.type = 'hidden';
+      csrf.name = '_token';
+      csrf.value = '{{ csrf_token() }}';
+
+      const method = document.createElement('input');
+      method.type = 'hidden';
+      method.name = '_method';
+      method.value = 'DELETE';
+
+      form.appendChild(csrf);
+      form.appendChild(method);
+
       document.body.appendChild(form);
       form.submit();
     }

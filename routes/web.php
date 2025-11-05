@@ -27,7 +27,7 @@ Route::get('portfolio', function () {
 })->name('portfolio'); 
 
 
-Route::view('dashboard', 'dashboard')
+Route::view('adminDashboard.pages.homepage', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 

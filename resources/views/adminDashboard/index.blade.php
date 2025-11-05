@@ -30,6 +30,7 @@
     @include('adminDashboard.components.footer')
   </main>
   @include('adminDashboard.components.js.script')
+  @stack('scripts')
 </body>
 
 </html>
